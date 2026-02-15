@@ -1,0 +1,21 @@
+change_id = "44ab519eb7771c0cd16e47e160b15f1f"
+type = "behavioral"
+intent = "feat: add linked config reader for coven TOML discovery"
+files = [
+    ".agent/changes/ba5014ec0c06a02d043b30d85c989d4a.toml",
+    ".agent/checkpoints/pre-jwt-auth.json",
+    "index.ts",
+    "src/channel.ts",
+    "src/linked-config.ts",
+    "src/mcp-bridge.ts",
+    "src/onboarding.ts",
+    "src/runtime.ts",
+    "src/status.ts",
+    "test/linked-config.test.ts",
+    "test/onboarding.test.ts",
+]
+breaking = false
+
+[invariants]
+checked = []
+status = "skipped"

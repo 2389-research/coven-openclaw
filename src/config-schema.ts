@@ -18,6 +18,7 @@ export type CovenAccountConfig = {
   authMethod?: CovenAuthMethod;
   sshKeyPath?: string;
   jwtSecret?: string;
+  jwtToken?: string;
   heartbeatIntervalMs?: number;
   reconnect?: Partial<CovenReconnectConfig>;
   enabled?: boolean;

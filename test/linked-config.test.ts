@@ -180,6 +180,33 @@ device_name = "dev"
     expect(result).toBeNull();
   });
 
+  it("handles values containing equals signs (base64 padding)", () => {
+    const config = `gateway = "host:50051"
+token = "eyJhbGci.payload.sig=="
+principal_id = "id-123"
+device_name = "dev"
+`;
+    vi.mocked(fs.readFileSync).mockReturnValue(config);
+
+    const result = readLinkedConfig();
+    expect(result).not.toBeNull();
+    expect(result!.token).toBe("eyJhbGci.payload.sig==");
+  });
+
+  it("handles single-quoted TOML values", () => {
+    const config = `gateway = 'http://host:50051'
+token = 'tok'
+principal_id = 'id-123'
+device_name = 'dev'
+`;
+    vi.mocked(fs.readFileSync).mockReturnValue(config);
+
+    const result = readLinkedConfig();
+    expect(result).not.toBeNull();
+    expect(result!.gateway).toBe("host:50051");
+    expect(result!.token).toBe("tok");
+  });
+
   it("leaves gateway without protocol prefix unchanged", () => {
     const config = `gateway = "plain-host:50051"
 token = "tok"

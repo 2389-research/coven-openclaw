@@ -12,6 +12,7 @@ import {
   type CovenReconnectConfig,
   type CovenAccountConfig,
 } from "./config-schema.js";
+import { readLinkedConfig } from "./linked-config.js";
 
 export type ResolvedCovenAccount = {
   accountId: string;
@@ -22,6 +23,7 @@ export type ResolvedCovenAccount = {
   authMethod: CovenAuthMethod;
   sshKeyPath: string;
   jwtSecret: string;
+  jwtToken: string;
   heartbeatIntervalMs: number;
   reconnect: CovenReconnectConfig;
   enabled: boolean;
@@ -54,15 +56,30 @@ export function resolveCovenAccount(
   const accounts = getAccountsMap(cfg) ?? {};
   const raw: CovenAccountConfig = accounts[resolvedId] ?? {};
 
+  // Read linked config once for fallback values
+  const linked = readLinkedConfig();
+
+  // Use linked config gateway when no explicit endpoint is configured
+  const endpoint =
+    raw.endpoint ?? (linked?.gateway ? linked.gateway : DEFAULT_ENDPOINT);
+
+  // Default to "jwt" auth when linked config provides a token and no explicit authMethod
+  const authMethod =
+    raw.authMethod ?? (linked?.token ? "jwt" : DEFAULT_AUTH_METHOD);
+
+  // Populate jwtToken from linked config when not explicitly set
+  const jwtToken = raw.jwtToken ?? (linked?.token ? linked.token : "");
+
   return {
     accountId: resolvedId,
-    endpoint: raw.endpoint ?? DEFAULT_ENDPOINT,
+    endpoint,
     mode: raw.mode ?? DEFAULT_MODE,
     agentFilter: raw.agentFilter ?? [],
     tls: raw.tls ?? false,
-    authMethod: raw.authMethod ?? DEFAULT_AUTH_METHOD,
+    authMethod,
     sshKeyPath: raw.sshKeyPath ?? "~/.ssh/id_ed25519",
     jwtSecret: raw.jwtSecret ?? "",
+    jwtToken,
     heartbeatIntervalMs: raw.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS,
     reconnect: {
       maxAttempts: raw.reconnect?.maxAttempts ?? DEFAULT_RECONNECT.maxAttempts,

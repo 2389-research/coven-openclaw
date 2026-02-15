@@ -64,8 +64,11 @@ function parseFlatToml(content: string): Record<string, string> {
     const key = line.slice(0, eqIndex).trim();
     let value = line.slice(eqIndex + 1).trim();
 
-    // Strip surrounding quotes
-    if (value.startsWith('"') && value.endsWith('"')) {
+    // Strip surrounding quotes (double or single)
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1);
     }
 
