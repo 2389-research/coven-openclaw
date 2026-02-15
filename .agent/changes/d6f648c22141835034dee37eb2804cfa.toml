@@ -1,0 +1,13 @@
+change_id = "d6f648c22141835034dee37eb2804cfa"
+type = "behavioral"
+intent = "feat: add protocol translation layer"
+files = [
+    ".agent/changes/743a30ef2ded876f0d2243a9ea145b4c.toml",
+    "src/protocol.ts",
+    "test/protocol.test.ts",
+]
+breaking = false
+
+[invariants]
+checked = []
+status = "skipped"
