@@ -1,0 +1,11 @@
+{
+  "id": "coven",
+  "name": "Coven Gateway",
+  "description": "Connect openclaw agents to coven-gateway via gRPC AgentStream",
+  "channels": ["coven"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}
