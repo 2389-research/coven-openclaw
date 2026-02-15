@@ -1,6 +1,6 @@
 {
-  "name": "@2389/openclaw-coven",
-  "version": "0.1.0",
+  "name": "@2389research/coven-openclaw",
+  "version": "0.1.1",
   "description": "Coven Gateway channel plugin for OpenClaw",
   "type": "module",
   "files": [
@@ -33,7 +33,7 @@
       "order": 90
     },
     "install": {
-      "npmSpec": "@2389/openclaw-coven",
+      "npmSpec": "@2389research/coven-openclaw",
       "defaultChoice": "npm"
     }
   }

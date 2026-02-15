@@ -7,7 +7,7 @@ import { covenPlugin } from "./src/channel.js";
 import { setCovenRuntime } from "./src/runtime.js";
 
 const plugin = {
-  id: "coven",
+  id: "coven-openclaw",
   name: "Coven Gateway",
   description: "Connect openclaw agents to coven-gateway via gRPC AgentStream",
   configSchema: emptyPluginConfigSchema(),
