@@ -1,0 +1,15 @@
+change_id = "97bb8b7489293d7a4898f52202232228"
+type = "behavioral"
+intent = "feat: wire JWT bearer token into gRPC stream metadata"
+files = [
+    ".agent/changes/98ce762d411de50efcab2f250c15f9d4.toml",
+    "src/grpc-client.ts",
+    "src/onboarding.ts",
+    "test/integration/lifecycle.test.ts",
+    "test/registration.test.ts",
+]
+breaking = false
+
+[invariants]
+checked = []
+status = "skipped"
