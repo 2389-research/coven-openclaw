@@ -1,0 +1,25 @@
+change_id = "1c43aa104e1c5bf12bcfd94a9237ede7"
+type = "behavioral"
+intent = "feat: add session key normalization"
+files = [
+    ".gitignore",
+    "docs/2026-02-14-coven-gateway-channel-plugin-design.md",
+    "docs/plans/2026-02-14-coven-channel-plugin-design.md",
+    "docs/plans/2026-02-14-coven-implementation-plan.md",
+    "openclaw.plugin.json",
+    "package-lock.json",
+    "package.json",
+    "proto/coven.proto",
+    "src/.gitkeep",
+    "src/config-schema.ts",
+    "src/normalize.ts",
+    "test/config.test.ts",
+    "test/normalize.test.ts",
+    "test/registration.test.ts",
+    "tsconfig.json",
+]
+breaking = false
+
+[invariants]
+checked = []
+status = "skipped"
