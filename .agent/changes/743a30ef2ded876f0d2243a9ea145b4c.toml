@@ -1,0 +1,13 @@
+change_id = "743a30ef2ded876f0d2243a9ea145b4c"
+type = "behavioral"
+intent = "feat: add coven config schema and account resolution"
+files = [
+    ".agent/changes/1c43aa104e1c5bf12bcfd94a9237ede7.toml",
+    "src/config.ts",
+    "src/registration.ts",
+]
+breaking = false
+
+[invariants]
+checked = []
+status = "skipped"
