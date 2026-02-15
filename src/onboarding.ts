@@ -91,6 +91,7 @@ export async function runOnboarding(
       authMethod: authMethod as ResolvedCovenAccount["authMethod"],
       sshKeyPath: sshKeyPath ?? "",
       jwtSecret: jwtSecret ?? "",
+      jwtToken: "",
       heartbeatIntervalMs: 30000,
       reconnect: { maxAttempts: 1, baseDelayMs: 1000, maxDelayMs: 1000 },
       enabled: true,

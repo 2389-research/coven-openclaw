@@ -86,7 +86,12 @@ export class CovenGrpcClient extends EventEmitter {
       credentials
     );
 
-    this.stream = this.grpcClient.AgentStream();
+    const metadata = new grpc.Metadata();
+    if (this.account.jwtToken) {
+      metadata.set("authorization", `Bearer ${this.account.jwtToken}`);
+    }
+
+    this.stream = this.grpcClient.AgentStream(metadata);
 
     this._disconnecting = false;
 

@@ -1,0 +1,16 @@
+change_id = "98ce762d411de50efcab2f250c15f9d4"
+type = "behavioral"
+intent = "feat: add jwtToken field and linked config fallback to account resolution"
+files = [
+    ".agent/changes/44ab519eb7771c0cd16e47e160b15f1f.toml",
+    "src/config-schema.ts",
+    "src/config.ts",
+    "src/linked-config.ts",
+    "test/config.test.ts",
+    "test/linked-config.test.ts",
+]
+breaking = false
+
+[invariants]
+checked = []
+status = "skipped"

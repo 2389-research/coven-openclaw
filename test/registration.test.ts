@@ -13,6 +13,7 @@ const baseAccount = {
   authMethod: "ssh" as const,
   sshKeyPath: "~/.ssh/id_ed25519",
   jwtSecret: "",
+  jwtToken: "",
   heartbeatIntervalMs: 30000,
   reconnect: { maxAttempts: 10, baseDelayMs: 1000, maxDelayMs: 60000 },
   enabled: true,

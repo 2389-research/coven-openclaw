@@ -33,6 +33,7 @@ function makeAccount(port: number): ResolvedCovenAccount {
     authMethod: "none",
     sshKeyPath: "",
     jwtSecret: "",
+    jwtToken: "",
     heartbeatIntervalMs: 500, // fast for testing
     reconnect: { maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 500 },
     enabled: true,
@@ -168,6 +169,32 @@ describe("CovenGrpcClient lifecycle", () => {
     const cancel = await cancelReceived;
     expect(cancel.request_id).toBe("req-cancel");
     expect(cancel.reason).toBe("user_requested");
+
+    await client.disconnect();
+  });
+
+  it("sends JWT authorization metadata when jwtToken is set", async () => {
+    const account = makeAccount(port);
+    account.jwtToken = "test-jwt-token-123";
+    const client = new CovenGrpcClient(account);
+    await client.connect("test-agent");
+
+    const serverStream = streams[0];
+    const authValues = serverStream.metadata.get("authorization");
+    expect(authValues).toEqual(["Bearer test-jwt-token-123"]);
+
+    await client.disconnect();
+  });
+
+  it("does not send authorization metadata when jwtToken is empty", async () => {
+    const account = makeAccount(port);
+    // jwtToken is already "" from makeAccount
+    const client = new CovenGrpcClient(account);
+    await client.connect("test-agent");
+
+    const serverStream = streams[0];
+    const authValues = serverStream.metadata.get("authorization");
+    expect(authValues).toEqual([]);
 
     await client.disconnect();
   });
