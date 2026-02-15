@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "description": "Coven Gateway channel plugin for OpenClaw",
   "type": "module",
+  "files": [
+    "src/",
+    "proto/",
+    "index.ts",
+    "openclaw.plugin.json",
+    "tsconfig.json"
+  ],
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
