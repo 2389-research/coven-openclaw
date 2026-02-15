@@ -12,6 +12,8 @@ import { CovenGrpcClient, type CovenWelcome } from "./grpc-client.js";
 import { covenSendMessageToInbound } from "./protocol.js";
 import { probeCoven, type CovenProbeResult } from "./status.js";
 import { registerCovenMcp, unregisterCovenMcp } from "./mcp-bridge.js";
+import { dispatchCovenInbound } from "./dispatch.js";
+import { getCovenRuntime } from "./runtime.js";
 
 // Track active gRPC clients per account
 const activeClients = new Map<string, CovenGrpcClient>();
@@ -177,6 +179,19 @@ export const covenPlugin: ChannelPlugin<ResolvedCovenAccount, CovenProbeResult> 
           ctx.log?.info?.(
             `[${account.accountId}] inbound message: ${inbound.requestId} from ${inbound.sender}`
           );
+
+          dispatchCovenInbound({
+            inbound,
+            account,
+            client,
+            cfg: ctx.cfg,
+            runtime: getCovenRuntime(),
+            log: ctx.log,
+          }).catch((err) => {
+            ctx.log?.error?.(
+              `[${account.accountId}] unhandled dispatch error: ${err}`
+            );
+          });
         });
 
         client.on("inject_context", (msg: any) => {
