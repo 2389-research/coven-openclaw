@@ -44,8 +44,14 @@ function getAccountsMap(
 
 export function listCovenAccountIds(cfg: AnyConfig): string[] {
   const accounts = getAccountsMap(cfg);
-  if (!accounts) return [];
-  return Object.keys(accounts);
+  if (accounts) return Object.keys(accounts);
+
+  // No explicit accounts configured — synthesize a "default" account
+  // when linked coven config exists so the channel actually starts.
+  const linked = readLinkedConfig();
+  if (linked) return ["default"];
+
+  return [];
 }
 
 export function resolveCovenAccount(

@@ -1,6 +1,6 @@
 {
   "name": "@2389research/coven-openclaw",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Coven Gateway channel plugin for OpenClaw",
   "type": "module",
   "files": [

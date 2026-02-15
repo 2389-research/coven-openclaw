@@ -45,12 +45,44 @@ describe("listCovenAccountIds", () => {
     expect(ids).toEqual(["default", "staging"]);
   });
 
-  it("returns empty array when no coven config", () => {
+  it("returns empty array when no coven config and no linked config", () => {
+    vi.mocked(readLinkedConfig).mockReturnValue(null);
     expect(listCovenAccountIds({})).toEqual([]);
   });
 
-  it("returns empty array when no accounts", () => {
+  it("returns empty array when no accounts and no linked config", () => {
+    vi.mocked(readLinkedConfig).mockReturnValue(null);
     expect(listCovenAccountIds({ channels: { coven: {} } })).toEqual([]);
+  });
+
+  it("returns default account when no coven config but linked config exists", () => {
+    vi.mocked(readLinkedConfig).mockReturnValue({
+      gateway: "linked.example.com:50051",
+      token: "jwt-token",
+      principalId: "uuid-here",
+      deviceName: "wizard",
+    });
+    expect(listCovenAccountIds({})).toEqual(["default"]);
+  });
+
+  it("returns default account when coven section has no accounts but linked config exists", () => {
+    vi.mocked(readLinkedConfig).mockReturnValue({
+      gateway: "linked.example.com:50051",
+      token: "jwt-token",
+      principalId: "uuid-here",
+      deviceName: "wizard",
+    });
+    expect(listCovenAccountIds({ channels: { coven: {} } })).toEqual(["default"]);
+  });
+
+  it("does not inject default when explicit accounts exist even with linked config", () => {
+    vi.mocked(readLinkedConfig).mockReturnValue({
+      gateway: "linked.example.com:50051",
+      token: "jwt-token",
+      principalId: "uuid-here",
+      deviceName: "wizard",
+    });
+    expect(listCovenAccountIds(baseCfg)).toEqual(["default", "staging"]);
   });
 });
 
@@ -78,6 +110,7 @@ describe("resolveCovenAccount", () => {
   });
 
   it("returns defaults for missing account", () => {
+    vi.mocked(readLinkedConfig).mockReturnValue(null);
     const account = resolveCovenAccount(baseCfg, "nonexistent");
     expect(account.accountId).toBe("nonexistent");
     expect(account.endpoint).toBe("localhost:50051");
