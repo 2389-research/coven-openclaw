@@ -3,6 +3,7 @@
 
 import type { ResolvedCovenAccount } from "./config.js";
 import { probeCoven } from "./status.js";
+import { readLinkedConfig } from "./linked-config.js";
 import {
   DEFAULT_ENDPOINT,
   DEFAULT_MODE,
@@ -14,6 +15,7 @@ export type OnboardingResult = {
   authMethod: string;
   sshKeyPath?: string;
   jwtSecret?: string;
+  jwtToken?: string;
   mode: string;
   tls: boolean;
   connectionTestPassed: boolean;
@@ -36,6 +38,63 @@ export type OnboardingContext = {
 export async function runOnboarding(
   ctx: OnboardingContext
 ): Promise<OnboardingResult> {
+  // Check for linked coven config before starting interactive prompts
+  const linked = readLinkedConfig();
+
+  if (linked) {
+    ctx.log.info(
+      `Found linked coven config. Using gateway: ${linked.gateway}, device: ${linked.deviceName}`
+    );
+
+    // Only ask for agent mode — endpoint, TLS, and auth are derived from linked config
+    const mode = await ctx.select("Agent mode", [
+      { label: "Multi (per-agent streams)", value: "multi" },
+      { label: "Single (internal routing)", value: "single" },
+    ]);
+
+    // Connection test with linked config values
+    ctx.log.info("\nTesting connection...");
+    const probe = await probeCoven(
+      {
+        accountId: "onboarding",
+        endpoint: linked.gateway,
+        mode: mode as ResolvedCovenAccount["mode"],
+        agentFilter: [],
+        tls: false,
+        authMethod: "jwt",
+        sshKeyPath: "",
+        jwtSecret: "",
+        jwtToken: linked.token,
+        heartbeatIntervalMs: 30000,
+        reconnect: { maxAttempts: 1, baseDelayMs: 1000, maxDelayMs: 1000 },
+        enabled: true,
+      },
+      5000
+    );
+
+    if (probe.ok) {
+      ctx.log.success(`Connected to ${linked.gateway} (${probe.latencyMs}ms)`);
+    } else {
+      ctx.log.warn(
+        `Could not reach ${linked.gateway}: ${probe.error}. You can still save the config and connect later.`
+      );
+    }
+
+    return {
+      endpoint: linked.gateway,
+      authMethod: "jwt",
+      jwtToken: linked.token,
+      mode,
+      tls: false,
+      connectionTestPassed: probe.ok,
+    };
+  }
+
+  // No linked config — suggest coven link and fall through to manual flow
+  ctx.log.info(
+    "No linked coven config found. Run `coven link <gateway-url>` to link this device, or configure manually below.\n"
+  );
+
   ctx.log.info("Setting up Coven Gateway connection...\n");
 
   // 1. Endpoint

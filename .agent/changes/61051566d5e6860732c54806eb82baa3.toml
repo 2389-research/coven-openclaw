@@ -1,0 +1,13 @@
+change_id = "61051566d5e6860732c54806eb82baa3"
+type = "behavioral"
+intent = "feat: add JWT call credentials to status probe for TLS connections"
+files = [
+    ".agent/changes/97bb8b7489293d7a4898f52202232228.toml",
+    "src/status.ts",
+    "test/status.test.ts",
+]
+breaking = false
+
+[invariants]
+checked = []
+status = "skipped"

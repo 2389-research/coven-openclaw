@@ -8,10 +8,17 @@ vi.mock("../src/status.js", () => ({
   probeCoven: vi.fn(),
 }));
 
+vi.mock("../src/linked-config.js", () => ({
+  readLinkedConfig: vi.fn(),
+  getLinkedConfigPath: vi.fn(() => "/mock/.config/coven/config.toml"),
+}));
+
 import { probeCoven } from "../src/status.js";
+import { readLinkedConfig } from "../src/linked-config.js";
 import { runOnboarding } from "../src/onboarding.js";
 
 const mockedProbeCoven = vi.mocked(probeCoven);
+const mockedReadLinkedConfig = vi.mocked(readLinkedConfig);
 
 function buildContext(overrides?: {
   promptResponses?: string[];
@@ -45,6 +52,8 @@ function buildContext(overrides?: {
 describe("runOnboarding", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: no linked config found (existing tests unchanged)
+    mockedReadLinkedConfig.mockReturnValue(null);
     mockedProbeCoven.mockResolvedValue({
       ok: true,
       latencyMs: 42,
@@ -223,6 +232,163 @@ describe("runOnboarding", () => {
       mode: "multi",
       tls: true,
       connectionTestPassed: true,
+    });
+  });
+
+  describe("linked config auto-detection", () => {
+    const LINKED_CONFIG = {
+      gateway: "gateway.example.com:50051",
+      token: "jwt-token-abc-123",
+      principalId: "uuid-1234",
+      deviceName: "harps-macbook",
+    };
+
+    it("auto-detects linked config and skips manual prompts", async () => {
+      mockedReadLinkedConfig.mockReturnValue(LINKED_CONFIG);
+
+      // Only one select needed: agent mode
+      const ctx = buildContext({
+        promptResponses: [],
+        selectResponses: ["multi"],
+      });
+
+      const result = await runOnboarding(ctx);
+
+      // No prompts should be called (no endpoint, no ssh key, no jwt secret)
+      expect(ctx.prompt).not.toHaveBeenCalled();
+      // Only one select: agent mode (no TLS, no auth method selects)
+      expect(ctx.select).toHaveBeenCalledTimes(1);
+      expect(result.endpoint).toBe("gateway.example.com:50051");
+      expect(result.authMethod).toBe("jwt");
+      expect(result.mode).toBe("multi");
+      expect(result.tls).toBe(false);
+    });
+
+    it("includes jwtToken in result when linked config found", async () => {
+      mockedReadLinkedConfig.mockReturnValue(LINKED_CONFIG);
+
+      const ctx = buildContext({
+        promptResponses: [],
+        selectResponses: ["single"],
+      });
+
+      const result = await runOnboarding(ctx);
+
+      expect(result.jwtToken).toBe("jwt-token-abc-123");
+    });
+
+    it("shows linked config info message", async () => {
+      mockedReadLinkedConfig.mockReturnValue(LINKED_CONFIG);
+
+      const ctx = buildContext({
+        promptResponses: [],
+        selectResponses: ["multi"],
+      });
+
+      await runOnboarding(ctx);
+
+      expect(ctx.log.info).toHaveBeenCalledWith(
+        expect.stringContaining("gateway.example.com:50051")
+      );
+      expect(ctx.log.info).toHaveBeenCalledWith(
+        expect.stringContaining("harps-macbook")
+      );
+    });
+
+    it("suggests coven link when no linked config", async () => {
+      mockedReadLinkedConfig.mockReturnValue(null);
+
+      const ctx = buildContext({
+        promptResponses: ["localhost:50051"],
+        selectResponses: ["false", "none", "multi"],
+      });
+
+      await runOnboarding(ctx);
+
+      expect(ctx.log.info).toHaveBeenCalledWith(
+        expect.stringContaining("coven link")
+      );
+    });
+
+    it("falls through to manual flow when no linked config", async () => {
+      mockedReadLinkedConfig.mockReturnValue(null);
+
+      const ctx = buildContext({
+        promptResponses: ["my-server:9090"],
+        selectResponses: ["true", "none", "single"],
+      });
+
+      const result = await runOnboarding(ctx);
+
+      // All prompts and selects should be called (endpoint prompt + TLS + auth + mode selects)
+      expect(ctx.prompt).toHaveBeenCalledTimes(1); // endpoint
+      expect(ctx.select).toHaveBeenCalledTimes(3); // TLS, auth method, mode
+      expect(result.endpoint).toBe("my-server:9090");
+      expect(result.authMethod).toBe("none");
+      expect(result.tls).toBe(true);
+      expect(result.mode).toBe("single");
+      expect(result.jwtToken).toBeUndefined();
+    });
+
+    it("passes linked config jwt token to probeCoven", async () => {
+      mockedReadLinkedConfig.mockReturnValue(LINKED_CONFIG);
+
+      const ctx = buildContext({
+        promptResponses: [],
+        selectResponses: ["multi"],
+      });
+
+      await runOnboarding(ctx);
+
+      expect(mockedProbeCoven).toHaveBeenCalledTimes(1);
+      const [account] = mockedProbeCoven.mock.calls[0];
+      expect(account.endpoint).toBe("gateway.example.com:50051");
+      expect(account.authMethod).toBe("jwt");
+      expect(account.jwtToken).toBe("jwt-token-abc-123");
+      expect(account.tls).toBe(false);
+    });
+
+    it("reports connection success with linked config", async () => {
+      mockedReadLinkedConfig.mockReturnValue(LINKED_CONFIG);
+      mockedProbeCoven.mockResolvedValue({
+        ok: true,
+        latencyMs: 23,
+        serverReachable: true,
+      });
+
+      const ctx = buildContext({
+        promptResponses: [],
+        selectResponses: ["multi"],
+      });
+
+      const result = await runOnboarding(ctx);
+
+      expect(result.connectionTestPassed).toBe(true);
+      expect(ctx.log.success).toHaveBeenCalledWith(
+        expect.stringContaining("23ms")
+      );
+    });
+
+    it("reports connection failure with linked config", async () => {
+      mockedReadLinkedConfig.mockReturnValue(LINKED_CONFIG);
+      mockedProbeCoven.mockResolvedValue({
+        ok: false,
+        latencyMs: 5000,
+        serverReachable: false,
+        error: "Timeout",
+      });
+
+      const ctx = buildContext({
+        promptResponses: [],
+        selectResponses: ["multi"],
+      });
+
+      const result = await runOnboarding(ctx);
+
+      expect(result.connectionTestPassed).toBe(false);
+      expect(ctx.log.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Timeout")
+      );
     });
   });
 });
